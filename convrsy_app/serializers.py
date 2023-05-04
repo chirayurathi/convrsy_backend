@@ -23,3 +23,10 @@ class UserSerializer(serializers.ModelSerializer):
             company=validated_data['company']
         )
         return user
+
+class UserReadSerializer(serializers.ModelSerializer):
+    company = CompanySerializer()
+    class Meta:
+        model = User
+        fields = ('id', 'first_name', 'last_name', 'email', 'password', 'company')
+        extra_kwargs = {'password': {'write_only': True}}

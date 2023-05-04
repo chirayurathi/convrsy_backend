@@ -1,38 +1,35 @@
 from rest_framework.views import APIView
-from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from .serializers import UserSerializer, CompanySerializer
+from .serializers import UserSerializer, CompanySerializer, UserReadSerializer
 from rest_framework import generics, status
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import User, Company
-
-
-class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    def validate(self, attrs):
-        data = super().validate(attrs)
-        data['user'] = UserSerializer(self.user).data
-        return data
-
-class CustomTokenObtainPairView(TokenObtainPairView):
-    serializer_class = CustomTokenObtainPairSerializer
+from django.contrib.auth import authenticate
 
 class LoginView(APIView):
-    permission_classes = [AllowAny]
+    def post(self, request):
+        email = request.data.get('email')
+        password = request.data.get('password')
 
-    def post(self, request, format=None):
-        serializer = CustomTokenObtainPairSerializer(data=request.data)
-        if serializer.is_valid():
-            return Response({
-                'data':serializer.validated_data,
-                'success':True
-            })
-        return Response({
-                'data':serializer.errors,
-                'success':False,
-                'message':serializer.error_messages[list(serializer.error_messages)][0]
-            }, status=400)
+        user = authenticate(email=email, password=password)
+
+        if user is not None:
+            refresh = RefreshToken.for_user(user)
+
+            serializer = UserReadSerializer(user)
+            print(serializer)
+            data = {
+                'data':{
+                    'access_token': str(refresh.access_token),
+                    'refresh_token': str(refresh),
+                    'user': serializer.data
+                },
+                "success":True
+            }
+            return Response(data, status=status.HTTP_200_OK)
+        else:
+            return Response({'message': 'Invalid credentials', "success":False}, status=status.HTTP_401_UNAUTHORIZED)
 
 class SignupView(generics.CreateAPIView):
     queryset = User.objects.all()
@@ -56,12 +53,24 @@ class SignupView(generics.CreateAPIView):
         return Response(response_data, status=status.HTTP_201_CREATED)
 
 
-class UserDataView(generics.RetrieveAPIView):
-    serializer_class = UserSerializer
+class UserDataView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get_object(self):
-        return self.request.user
+    def get(self, request):
+        print(request)
+        user = request.user
+        data = {
+            'data':{
+            'id': user.id,
+            'company': user.company.name,
+            'email': user.email,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            },
+            'success':True
+            # Add any other user data you want to include in the response
+        }
+        return Response(data)
 
 class GetAllCompanies(APIView):
     def get(self, request):
