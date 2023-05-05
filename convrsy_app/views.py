@@ -6,6 +6,7 @@ from rest_framework import generics, status
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import User, Company
 from django.contrib.auth import authenticate
+import copy
 
 class LoginView(APIView):
     def post(self, request):
@@ -66,6 +67,10 @@ class UserDataView(APIView):
             'email': user.email,
             'first_name': user.first_name,
             'last_name': user.last_name,
+            'company':{
+                'name':user.company.name,
+                'color':user.company.color
+                }
             },
             'success':True
             # Add any other user data you want to include in the response
@@ -80,3 +85,25 @@ class GetAllCompanies(APIView):
             return Response({'data':serializer.data,'success':True})
         else:
             return Response(status=status.HTTP_204_NO_CONTENT)
+
+class UpdateUserDataView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request):
+        print(request.data["company"]["name"])
+        user = request.user
+        data = copy.deepcopy(request.data)
+        data["company"] = data["company"]["name"]
+        serializer = UserSerializer(user, data=data, partial=True)
+        if serializer.is_valid():
+            comp = Company.objects.get(pk=data['company'])
+            print(request.data["company"])
+            compSerializer = CompanySerializer(comp, data=request.data["company"], partial = True)
+            if compSerializer.is_valid():
+                print(compSerializer.validated_data)
+                serializer.save()
+                compSerializer.save()
+                return Response({'success':True,'data':UserReadSerializer(User.objects.get(pk=serializer.data.get("id"))).data}, status=status.HTTP_200_OK)
+            else:
+                return Response(compSerializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

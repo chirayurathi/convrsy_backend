@@ -3,7 +3,7 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 
 class Company(models.Model):
     name = models.CharField(max_length=255, primary_key=True)
-    color = models.CharField(max_length=8, blank=True, null=True)
+    color = models.CharField(max_length=25, blank=True, null=True)
 
 class UserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
