@@ -77,6 +77,15 @@ class UserDataView(APIView):
         }
         return Response(data)
 
+class CompanyCreateView(APIView):
+
+    def post(self, request):
+        serializer = CompanySerializer(data=request.data)
+        if serializer.is_valid():
+            company = serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 class GetAllCompanies(APIView):
     def get(self, request):
         queryset = Company.objects.all()
