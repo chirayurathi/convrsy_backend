@@ -34,3 +34,45 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name', 'company']
+
+
+class Form(models.Model):
+    creator = models.ForeignKey(User, on_delete=models.CASCADE)
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    created_on = models.DateTimeField(auto_now_add=True)
+
+class Category(models.Model):
+    name = models.TextField(max_length=30, primary_key=True)
+
+class Question(models.Model):
+    TEXT = 'text'
+    MCQ = 'mcq'
+    QUESTION_TYPES = [
+        (TEXT, 'Text'),
+        (MCQ, 'MCQ'),
+    ]
+    form = models.ForeignKey(Form, on_delete=models.CASCADE)
+    type = models.CharField(max_length=20, choices=QUESTION_TYPES, default=TEXT)
+    text = models.CharField(max_length=255)
+    is_required = models.BooleanField(default=False)
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
+
+class QuestionChoices(models.Model):
+    text = models.CharField(max_length=255)
+    question = models.ForeignKey(Question, on_delete=models.CASCADE)
+
+class Response(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    form = models.ForeignKey(Form, on_delete=models.CASCADE)
+    question = models.ForeignKey(Question, on_delete=models.CASCADE)
+    text_answer = models.TextField(blank=True, null=True)
+    mcq_answer = models.CharField(max_length=255, blank=True, null=True)
+    file_answer = models.FileField(upload_to='uploads/%Y/%m/%d/', blank=True, null=True)
+
+class Reply(models.Model):
+    response = models.ForeignKey(Response, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+

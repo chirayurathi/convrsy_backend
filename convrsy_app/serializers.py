@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Company
+from .models import User, Company, Form, Question, Response
 
 class CompanySerializer(serializers.ModelSerializer):
     class Meta:
@@ -30,3 +30,28 @@ class UserReadSerializer(serializers.ModelSerializer):
         model = User
         fields = ('id', 'first_name', 'last_name', 'email', 'password', 'company')
         extra_kwargs = {'password': {'write_only': True}}
+
+
+class ResponseSerializer(serializers.ModelSerializer):
+    user = serializers.StringRelatedField()
+
+    class Meta:
+        model = Response
+        fields = '__all__'
+
+
+class QuestionSerializer(serializers.ModelSerializer):
+    responses = ResponseSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Question
+        fields = '__all__'
+
+
+class FormSerializer(serializers.ModelSerializer):
+    questions = QuestionSerializer(many=True, read_only=True)
+    creator = serializers.StringRelatedField()
+
+    class Meta:
+        model = Form
+        fields = '__all__'

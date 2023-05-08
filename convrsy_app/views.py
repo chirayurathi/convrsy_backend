@@ -83,7 +83,7 @@ class CompanyCreateView(APIView):
         serializer = CompanySerializer(data=request.data)
         if serializer.is_valid():
             company = serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response({"data":serializer.data, "success":True}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class GetAllCompanies(APIView):
