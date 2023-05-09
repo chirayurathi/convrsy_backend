@@ -12,4 +12,5 @@ urlpatterns = [
     path('create-company/', CompanyCreateView.as_view(), name="create-company"),
     path('get-companies/', GetAllCompanies.as_view(), name='companies_view'),
     path('update-user/',UpdateUserDataView.as_view(), name="user_update"),
+    path('create-form/', AddFormView.as_view(), name="add-form"),
 ]

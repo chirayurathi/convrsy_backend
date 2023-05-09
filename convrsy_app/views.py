@@ -4,7 +4,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from .serializers import UserSerializer, CompanySerializer, UserReadSerializer
 from rest_framework import generics, status
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import User, Company
+from .models import User, Company, Form, Question, QuestionChoices
 from django.contrib.auth import authenticate
 import copy
 
@@ -116,3 +116,20 @@ class UpdateUserDataView(APIView):
             else:
                 return Response(compSerializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class AddFormView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        data = request.data
+        print(data)
+        form = Form(title = data.get("title"), creator= request.user)
+        form.save()
+        for i in data["questions"]:
+            question = Question(form = form, type=i["type"], text=i["text"])
+            question.save()
+            if(len(i["options"])>0 and i["type"] == "MCQ"):
+                for j in i["options"]:
+                    choice = QuestionChoices(text=j, question = question)
+                    choice.save()
+        return Response({"data":form.title,"success":True})
