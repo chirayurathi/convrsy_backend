@@ -1,11 +1,14 @@
 from rest_framework.views import APIView
+from rest_framework.generics import RetrieveAPIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from .serializers import UserSerializer, CompanySerializer, UserReadSerializer
+from .serializers import UserSerializer, CompanySerializer, UserReadSerializer, FormSerializer, QuestionSerializer, QuestionChoiceSerializer
 from rest_framework import generics, status
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import User, Company, Form, Question, QuestionChoices
 from django.contrib.auth import authenticate
+from django.shortcuts import get_object_or_404
+
 import copy
 
 class LoginView(APIView):
@@ -133,3 +136,29 @@ class AddFormView(APIView):
                     choice = QuestionChoices(text=j, question = question)
                     choice.save()
         return Response({"data":form.title,"success":True})
+
+class GetUserForms(APIView):
+    def get(self, request):
+        queryset = Form.objects.filter(creator=request.user)
+        if queryset.exists():
+            serializer = FormSerializer(queryset, many=True)
+            return Response({'data':serializer.data,'success':True})
+        else:
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+class FormDetailAPIView(RetrieveAPIView):
+    serializer_class = FormSerializer
+    queryset = Form.objects.all()
+
+    def get(self, request, *args, **kwargs):
+        form_id = kwargs.get('form_id')
+        form = get_object_or_404(Form, id=form_id)
+        questions = Question.objects.filter(form=form)
+        data = self.get_serializer(form).data
+        data['questions'] = []
+        for question in questions:
+            question_data = QuestionSerializer(question).data
+            choices = QuestionChoices.objects.filter(question=question)
+            question_data['options'] = QuestionChoiceSerializer(choices, many=True).data
+            data['questions'].append(question_data)
+        return Response({"data":data,"success":True}, status=status.HTTP_200_OK)

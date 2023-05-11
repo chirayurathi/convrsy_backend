@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Company, Form, Question, Response
+from .models import User, Company, Form, Question, Response, QuestionChoices
 
 class CompanySerializer(serializers.ModelSerializer):
     class Meta:
@@ -55,3 +55,8 @@ class FormSerializer(serializers.ModelSerializer):
     class Meta:
         model = Form
         fields = '__all__'
+
+class QuestionChoiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = QuestionChoices
+        fields= '__all__'

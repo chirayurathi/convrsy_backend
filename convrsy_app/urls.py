@@ -13,4 +13,7 @@ urlpatterns = [
     path('get-companies/', GetAllCompanies.as_view(), name='companies_view'),
     path('update-user/',UpdateUserDataView.as_view(), name="user_update"),
     path('create-form/', AddFormView.as_view(), name="add-form"),
+    path('get-user-forms/', GetUserForms.as_view(), name="get-user-forms"),
+    path('form/<int:form_id>/', FormDetailAPIView.as_view(), name='form-detail'),
+
 ]
